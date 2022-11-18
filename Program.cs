@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using NLog.Extensions.Logging;
 
 namespace WorkerServiceRunner
 {
@@ -25,6 +26,7 @@ namespace WorkerServiceRunner
                     //services.AddSingleton<IContainer, MyContainer>();//配置IContainer接口和MyContainer类的单列模式
                     services.AddHostedService<AutoCMDExecuter>();//增加一个woker
                    
-                });
+                })
+                .ConfigureLogging(m => { m.Services.AddLogging(l => { l.AddNLog(); }); });
     }
 }
