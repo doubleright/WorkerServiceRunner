@@ -19,9 +19,11 @@ namespace WorkerServiceRunner
         private readonly ILogger<AutoCMDExecuter> _logger;
         private readonly IContainer _container;
         private readonly IConfiguration _configuration;
-        private int ExecInterval;
-        private int StartHour;
-        private bool IsExeCommandOnce;
+        protected int ExecInterval;
+        protected int BATStartHour;
+        protected int SYNStartHour;
+        protected bool IsExeBATOnce;
+        protected bool IsExeSYNOnce;
 
         public AutoCMDExecuter(ILogger<AutoCMDExecuter> logger, IContainer container)
         {
@@ -46,18 +48,24 @@ namespace WorkerServiceRunner
         {
             try
             {
-                IsExeCommandOnce = false;
+                IsExeBATOnce = false;
+                IsExeSYNOnce = false;
                 ExecInterval = 1;
-                StartHour = int.Parse(_configuration[nameof(StartHour)]);
-                if (StartHour < 0 || StartHour > 23)
+                SYNStartHour = int.Parse(_configuration[nameof(SYNStartHour)]);
+                if (SYNStartHour < 0 || SYNStartHour > 23)
                 {
-                    StartHour = 0;
+                    SYNStartHour = 0;
+                }
+                BATStartHour = int.Parse(_configuration[nameof(BATStartHour)]);
+                if (BATStartHour < 0 || BATStartHour > 23)
+                {
+                    BATStartHour = 0;
                 }
             }
             catch 
             {
-                StartHour = 0;
-                ExecInterval = 1;
+                SYNStartHour = 0;
+                BATStartHour = 1;
             }
         }
         
@@ -69,7 +77,19 @@ namespace WorkerServiceRunner
                 {
                     try
                     {
-                        if (DateTime.Now.Hour == StartHour && !IsExeCommandOnce)
+                        if (DateTime.Now.Hour == SYNStartHour && !IsExeSYNOnce)
+                        {
+                            var syn = _configuration["SYN"] ?? "";
+                            var rs = ExeCommand(syn);
+                            _logger.LogInformation($"=====================================================\r\n{rs}\r\n=====================================================");
+                            IsExeSYNOnce = true;
+                        }
+                        else if (DateTime.Now.Hour != SYNStartHour)
+                        {
+                            IsExeSYNOnce = false;
+                        }
+
+                        if (DateTime.Now.Hour == BATStartHour && !IsExeBATOnce)
                         {
                             var bat = _configuration["BAT"] ?? "";
                             if (string.IsNullOrWhiteSpace(bat))
@@ -79,11 +99,11 @@ namespace WorkerServiceRunner
                             var cmd = File.ReadAllText(bat);
                             var rs = ExeCommand(cmd);
                             _logger.LogInformation($"=====================================================\r\n{rs}\r\n=====================================================");
-                            IsExeCommandOnce = true;
+                            IsExeBATOnce = true;
                         }
-                        else if (DateTime.Now.Hour != StartHour)
+                        else if (DateTime.Now.Hour != BATStartHour)
                         {
-                            IsExeCommandOnce = false;
+                            IsExeBATOnce = false;
                         }                    
                     }
                     catch (Exception ex)
