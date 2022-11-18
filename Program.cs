@@ -23,7 +23,7 @@ namespace WorkerServiceRunner
                 {
                     //services.AddTransient<IContainer, MyContainer>();//配置IContainer接口和MyContainer类的依赖注入关系
                     //services.AddSingleton<IContainer, MyContainer>();//配置IContainer接口和MyContainer类的单列模式
-                    services.AddHostedService<Worker>();//增加一个woker
+                    services.AddHostedService<AutoCMDExecuter>();//增加一个woker
                    
                 });
     }
